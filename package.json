@@ -1,0 +1,9 @@
+{
+  "name": "runway-store",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "python -m unittest discover -s tests -v",
+    "check": "node --check app.js"
+  }
+}

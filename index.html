@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Runway Store</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="/">RUNWAY / STORE</a
+      ><span>A small log-structured storage engine</span
+      ><button id="refresh">Refresh</button>
+    </header>
+    <main>
+      <section class="intro">
+        <p class="eyebrow">Write. Flush. Merge.</p>
+        <h1>Follow a value<br />all the way to disk.</h1>
+        <p>
+          A real write-ahead log, immutable sorted runs, and a manifest that
+          decides what is live. Change a key, flush a run, and inspect what
+          compaction keeps.
+        </p>
+      </section>
+      <p id="message" role="status">Opening the workspace…</p>
+      <section class="stats" id="stats"></section>
+      <section class="storage">
+        <article>
+          <div class="section-title">
+            <h2>01 / Memtable</h2>
+            <button id="flush">Flush to a run</button>
+          </div>
+          <div id="memtable"></div>
+          <p class="caption">
+            Writes reach the fsynced WAL before entering memory.
+          </p>
+        </article>
+        <article>
+          <div class="section-title">
+            <h2>02 / Sorted runs</h2>
+            <button id="compact">Compact all runs</button>
+          </div>
+          <div id="runs"></div>
+          <p class="caption">
+            Compaction retains the latest sequence for every key, including
+            tombstones.
+          </p>
+        </article>
+      </section>
+      <details>
+        <summary>Write a record</summary>
+        <form id="write">
+          <label
+            >Key<input
+              id="key"
+              value="studio/notebook"
+              maxlength="64"
+              required /></label
+          ><label
+            >Value<textarea id="value" rows="3">
+A first edition.</textarea
+            ></label
+          ><label class="check"
+            ><input id="delete" type="checkbox" /> Write a deletion
+            tombstone</label
+          ><button type="submit">Append durable write</button
+          ><span id="expected"></span>
+        </form>
+      </details>
+      <section class="records">
+        <div class="section-title">
+          <h2>03 / Latest records</h2>
+          <label
+            >Prefix filter<input
+              id="prefix"
+              placeholder="studio/"
+              maxlength="64" /></label
+          ><button id="filter">Filter</button
+          ><button id="export">Export evidence</button>
+        </div>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Sequence</th>
+                <th>Value / state</th>
+              </tr>
+            </thead>
+            <tbody id="records"></tbody>
+          </table>
+        </div>
+      </section>
+      <details>
+        <summary>Trace a key lookup</summary>
+        <form id="lookup">
+          <label
+            >Key<input
+              id="lookup-key"
+              value="studio/notebook"
+              required
+              maxlength="64" /></label
+          ><button>Trace lookup</button>
+        </form>
+        <pre id="lookup-result">No lookup yet.</pre>
+      </details>
+      <details>
+        <summary>Recovery and retained files</summary>
+        <div id="recovery"></div>
+        <p>
+          Only an incomplete final WAL frame is truncated on startup. Complete
+          frames with invalid headers or checksums stop recovery. SHA-256
+          protects run-file integrity. These checks detect accidental
+          corruption; they are not authentication.
+        </p>
+        <p>
+          Unreferenced runs are retained for inspection, not deleted
+          automatically. A crashed process can leave a writer.lock; stop its
+          owner before manually removing that stale lock. File contents are
+          fsynced, but directory entries are not, so this demo does not promise
+          power-loss durability.
+        </p>
+      </details>
+    </main>
+    <footer>
+      Every version has a sequence. Every live run has a manifest entry.
+    </footer>
+  </body>
+</html>
