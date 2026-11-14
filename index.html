@@ -9,26 +9,19 @@
   </head>
   <body>
     <header>
-      <a href="/">RUNWAY / STORE</a
-      ><span>A small log-structured storage engine</span
-      ><button id="refresh">Refresh</button>
+      <h1>Runway Store</h1>
+      <div class="header-actions">
+        <button id="refresh">Refresh</button
+        ><button id="write-open" class="primary">Write record</button>
+      </div>
     </header>
     <main>
-      <section class="intro">
-        <p class="eyebrow">Write. Flush. Merge.</p>
-        <h1>Follow a value<br />all the way to disk.</h1>
-        <p>
-          A real write-ahead log, immutable sorted runs, and a manifest that
-          decides what is live. Change a key, flush a run, and inspect what
-          compaction keeps.
-        </p>
-      </section>
       <p id="message" role="status">Opening the workspace…</p>
       <section class="stats" id="stats"></section>
       <section class="storage">
         <article>
           <div class="section-title">
-            <h2>01 / Memtable</h2>
+            <h2>Memtable</h2>
             <button id="flush">Flush to a run</button>
           </div>
           <div id="memtable"></div>
@@ -38,7 +31,7 @@
         </article>
         <article>
           <div class="section-title">
-            <h2>02 / Sorted runs</h2>
+            <h2>Sorted runs</h2>
             <button id="compact">Compact all runs</button>
           </div>
           <div id="runs"></div>
@@ -48,33 +41,14 @@
           </p>
         </article>
       </section>
-      <details>
-        <summary>Write a record</summary>
-        <form id="write">
-          <label
-            >Key<input
-              id="key"
-              value="studio/notebook"
-              maxlength="64"
-              required /></label
-          ><label
-            >Value<textarea id="value" rows="3">
-A first edition.</textarea
-            ></label
-          ><label class="check"
-            ><input id="delete" type="checkbox" /> Write a deletion
-            tombstone</label
-          ><button type="submit">Append durable write</button
-          ><span id="expected"></span>
-        </form>
-      </details>
+
       <section class="records">
         <div class="section-title">
-          <h2>03 / Latest records</h2>
+          <h2>Latest records</h2>
           <label
             >Prefix filter<input
               id="prefix"
-              placeholder="studio/"
+              placeholder="app/"
               maxlength="64" /></label
           ><button id="filter">Filter</button
           ><button id="export">Export evidence</button>
@@ -98,7 +72,7 @@ A first edition.</textarea
           <label
             >Key<input
               id="lookup-key"
-              value="studio/notebook"
+              value="app/config"
               required
               maxlength="64" /></label
           ><button>Trace lookup</button>
@@ -122,9 +96,27 @@ A first edition.</textarea
           power-loss durability.
         </p>
       </details>
+      <dialog id="write-dialog" aria-labelledby="write-title">
+        <div class="section-title">
+          <h2 id="write-title">Write record</h2>
+          <button id="write-close">Close</button>
+        </div>
+        <p id="write-message" role="status"></p>
+        <form id="write">
+          <label
+            >Key<input
+              id="key"
+              value="app/config"
+              maxlength="64"
+              required /></label
+          ><label>Value<textarea id="value" rows="3">enabled</textarea></label
+          ><label class="check"
+            ><input id="delete" type="checkbox" /> Write a deletion
+            tombstone</label
+          ><button type="submit">Append durable write</button
+          ><span id="expected"></span>
+        </form>
+      </dialog>
     </main>
-    <footer>
-      Every version has a sequence. Every live run has a manifest entry.
-    </footer>
   </body>
 </html>

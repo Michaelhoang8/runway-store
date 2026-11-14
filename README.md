@@ -12,12 +12,14 @@ python run.py --port 8000
 
 Open http://127.0.0.1:8000. Requires Python 3.10+; Node 22+ is only needed for the JavaScript check. No package installation is required. The ignored `data/` directory persists the workspace; `--data another-directory` chooses an independent one.
 
+The workspace follows the storage lifecycle: an amber memtable lane, layered immutable-run cards, and the latest-record table. Newly published runs appear with a short transition; reduced-motion preferences disable it. Record creation and tombstones use a focused write dialog with inline operation feedback.
+
 ## Try a storage lifecycle
 
-1. Write `studio/notebook = A first edition.` and `studio/pen = Blue ink.`
+1. Write `app/config = enabled` and `app/region = us-east`
 2. Flush the memtable. Both records become an immutable sorted run, and the WAL resets.
-3. Update the notebook and write a tombstone for the pen. Flush again.
-4. Compact. Four stored versions become two latest records; the pen's tombstone is retained.
+3. Update the config and write a tombstone for the region. Flush again.
+4. Compact. Four stored versions become two latest records; the region's tombstone is retained.
 5. Write another key without flushing, stop and restart the server, and observe WAL replay.
 
 Two clients editing the same workspace use a global expected sequence. A stale write returns 409 and leaves the WAL unchanged. Refresh before retrying. There are no idempotency keys: if an acknowledgement is lost, refresh and inspect the sequence/value before deciding what to do next.
@@ -48,13 +50,13 @@ An I/O error while appending closes the store to avoid continuing after an uncer
 
 ## API
 
-| Method | Path | Input / result |
-| --- | --- | --- |
-| GET | `/api/state?prefix=studio/` | Latest filtered records, memtable, run descriptors, WAL/recovery counters |
-| GET | `/api/lookup?key=studio/notebook` | Latest record or null, source, logical probe list |
-| POST | `/api/records` | `{key,value,expectedSequence}`; 201 on append, 409 on stale sequence |
-| POST | `/api/flush` | `{}`; publish pending values |
-| POST | `/api/compact` | `{}`; flush, then merge live runs |
+| Method | Path                              | Input / result                                                            |
+| ------ | --------------------------------- | ------------------------------------------------------------------------- |
+| GET    | `/api/state?prefix=studio/`       | Latest filtered records, memtable, run descriptors, WAL/recovery counters |
+| GET    | `/api/lookup?key=studio/notebook` | Latest record or null, source, logical probe list                         |
+| POST   | `/api/records`                    | `{key,value,expectedSequence}`; 201 on append, 409 on stale sequence      |
+| POST   | `/api/flush`                      | `{}`; publish pending values                                              |
+| POST   | `/api/compact`                    | `{}`; flush, then merge live runs                                         |
 
 Evidence exports are diagnostic snapshots, not restorable backups. They include values, including unflushed values and tombstones, and reflect the applied prefix filter for the latest-record list. Global storage counters and memtable remain unfiltered.
 

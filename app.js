@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 let state,
-  busy = false;
+  busy = false,
+  knownRuns = new Set();
 function el(tag, text, className) {
   const n = document.createElement(tag);
   n.textContent = text;
@@ -10,6 +11,8 @@ function el(tag, text, className) {
 function message(text, error = false) {
   $("message").textContent = text;
   $("message").classList.toggle("error", error);
+  $("write-message").textContent = text;
+  $("write-message").classList.toggle("error", error);
 }
 async function api(path, body) {
   const response = await fetch(
@@ -41,7 +44,7 @@ function render() {
   );
   $("memtable").replaceChildren(
     ...state.memtable.map((r) => {
-      const n = el("div", "", "entry");
+      const n = el("div", "", `entry ${r.value === null ? "tombstone" : ""}`);
       n.append(
         el("strong", r.key),
         el(
@@ -58,15 +61,17 @@ function render() {
     );
   $("runs").replaceChildren(
     ...state.runs.map((r, i) => {
-      const n = el("div", "", "run");
+      const n = el("div", "", `run ${knownRuns.has(r.file) ? "" : "fresh"}`);
       n.append(
-        el("strong", `Run ${i + 1} · ${r.count} retained records`),
+        el("span", String(i + 1).padStart(2, "0"), "run-number"),
+        el("strong", `${r.count} retained records`),
         el("p", r.file),
         el("p", "SHA-256 " + r.sha256),
       );
       return n;
     }),
   );
+  knownRuns = new Set(state.runs.map((r) => r.file));
   if (!state.runs.length)
     $("runs").append(
       el(
@@ -116,17 +121,28 @@ async function refresh() {
 async function action(fn) {
   if (busy) return;
   busy = true;
-  document.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  document
+    .querySelectorAll("button,input,textarea")
+    .forEach((b) => (b.disabled = true));
   try {
     await fn();
   } catch (error) {
     message(error.message, true);
   } finally {
     busy = false;
-    document.querySelectorAll("button").forEach((b) => (b.disabled = false));
-    if (state) render();
+    document
+      .querySelectorAll("button,input,textarea")
+      .forEach((b) => (b.disabled = false));
+    $("value").disabled = $("delete").checked;
+    if (state) {
+      $("flush").disabled = !state.memtable.length;
+      $("compact").disabled =
+        state.runs.length + (state.memtable.length ? 1 : 0) < 2;
+    }
   }
 }
+$("write-open").onclick = () => $("write-dialog").showModal();
+$("write-close").onclick = () => $("write-dialog").close();
 $("refresh").onclick = () =>
   action(async () => {
     await refresh();
